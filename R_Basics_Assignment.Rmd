@@ -1,0 +1,55 @@
+---
+title: "R_basics_assignment"
+author: "Kyra Reisenfeld"
+date: "January 14, 2020"
+output: html_document
+---
+
+```{r}
+setwd("~/Documents")
+tgpp <- read.csv("./Quant/Quant_assignments/tgpp.csv", header = TRUE)
+head(tgpp)
+```
+1. What are the names of the columns in this dataset?
+The names of the columns are "plot, year, record_id, corner, scale, richness, easting, northing, slope, ph, yrsslb"
+2. How many rows and columns does this data file have?
+There are 11 columns and 4,080 rows in this data file.
+3. What kind of object is each data column? Hint: checkout the function sapply().
+```{r}
+sapply(tgpp, class)
+```
+4. What are the values of the the datafile for rows 1, 5, and 8 at columns 3, 
+7, and 10
+```{r}
+tgpp[1, 3]
+tgpp[1,7]
+tgpp[1,10]
+tgpp[5,3]
+tgpp[5,7]
+tgpp[5,10]
+tgpp[8, 3]
+tgpp[8,7]
+tgpp[8,10]
+```
+OR
+```{r}
+df<-c(tgpp[1, 3], tgpp[1,7], tgpp[1,10], tgpp[5,3], tgpp[5,7], tgpp[5,10], tgpp[8, 3], tgpp[8,7], tgpp[8,10])
+df
+```
+
+5. Create a pdf of the relationship between the variables "scale" and "richness". 
+Scale is the area in square meters of the quadrat in which richness was
+recorded. Be sure to label your axes clearly, and choose a color you find
+pleasing for the points. To get a list of available stock colors use the
+function colors(). Also see this link: 
+<http://research.stowers-institute.org/efg/R/Color/Chart/index.htm>.
+```{r}
+p<-plot(log(richness)~log(scale), col="red", data=tgpp)
+print(p)
+```
+6. What happens to your plot when you set the plot argument log equal to 'xy'.
+`plot(..., log='xy')`
+```{r}
+plot(richness~scale, col="red", log='xy',data=tgpp)
+```
+
