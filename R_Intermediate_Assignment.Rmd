@@ -7,7 +7,7 @@ output:
   pdf_document: default
 ---
 ```{r}
-data(iris)
+data(iris) 
 head(iris)
 ##create unique vector of species names
 sp_ids = unique(iris$Species)
