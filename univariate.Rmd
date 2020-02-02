@@ -1,0 +1,143 @@
+```{r}
+trees <- read.csv('https://raw.githubusercontent.com/dmcglinn/quant_methods/gh-pages/data/treedata_subset.csv')
+```
+```{r}
+library(car)
+cover <- tapply(trees$cover,list(trees$plotID, trees$spcode), mean,)
+# replace nas with 0
+cover <- ifelse(is.na(cover), 0, cover)
+
+env <- aggregate(trees [ , c('tci', 'elev', 'streamdist', 'beers')], by=list(trees$plotID), mean)
+```
+```{r}
+abiefra <- trees[trees$spcode=="ABIEFRA",]
+acerrub <- trees[trees$spcode=="ACERRUB",]
+```
+Visual for acer
+```{r}
+boxplot(cover ~ disturb, data = acerrub)
+library(ggplot2)
+#elevation
+ggplot(data = acerrub, mapping = aes(x = cover, y = elev)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+#tci
+ggplot(data = acerrub, mapping = aes(x = cover, y = tci)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+#streamdist
+ggplot(data = acerrub, mapping = aes(x = cover, y = streamdist)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+#beers
+ggplot(data = acerrub, mapping = aes(x = cover, y = beers)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+```
+Visual for abiefra
+```{r}
+boxplot(cover ~ disturb, data = abiefra)
+#elevation
+ggplot(data = abiefra, mapping = aes(x = cover, y = elev)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+#tci
+ggplot(data = abiefra, mapping = aes(x = cover, y = tci)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+#streamdist
+ggplot(data = abiefra, mapping = aes(x = cover, y = streamdist)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+#beers
+ggplot(data = abiefra, mapping = aes(x = cover, y = beers)) + 
+  geom_point(mapping = aes(color = disturb)) +
+  geom_smooth(mapping = aes(linetype = disturb, color = disturb), method = 'loess') +
+  scale_color_manual(values = c("red", "blue", "green", "purple")) +
+  theme_classic()
+
+##very little individuals for all disturb except virgin 
+```
+Habitat generalist (acer rubrum)
+```{r}
+##does not explain cover very well, slight significance with interaction of elev and beers
+ace_mod <- lm(cover ~ elev * tci * streamdist * disturb * beers, data=acerrub)
+summary(ace_mod)
+##significant difference with elev, streamdist, and beers
+ace_mod2 <- lm(cover ~ elev + tci + streamdist + disturb + beers, data=acerrub)
+summary(ace_mod2)
+step(ace_mod)
+step(ace_mod2)
+##ace_mod is more parsimonious, however interaction model does not tell us much about the data 
+
+ace_plot <- lm(cover ~ plotID, data=acerrub)
+Anova(ace_plot, type=3)
+
+ace_disturb <- lm(cover ~ disturb, data=acerrub)
+Anova(ace_disturb, type=3)
+```
+Habitat Specialist (Abies fraseri)
+```{r}
+##does not explain cover
+abi_mod <- lm(cover ~ elev * tci * streamdist * disturb * beers, data=abiefra)
+summary(abi_mod)
+##cover is significantly different with elev
+abi_mod2 <- lm(cover ~ elev + tci + streamdist + disturb + beers, data=abiefra)
+summary(abi_mod2)
+step(abi_mod)
+step(abi_mod2)
+##abi_mod is more parsimonious, however interaction model does not tell us much about the data 
+##variance explained better in acerrub due to low sample size in abiefra
+
+abi_plot <- lm(cover ~ plotID, data=abiefra)
+Anova(abi_plot, type=3)
+
+abi_disturb <- lm(cover ~ disturb, data=abiefra)
+Anova(abi_disturb, type=3)
+```
+Cover (with absences)
+```{r}
+##I have the converted models but am unsure how to run models with this format
+```
+
+```{r}
+acer_poi = glm(cover ~ tci + elev + streamdist + disturb + beers, data=acerrub, family='poisson')
+summary(acer_poi)
+##elev still significant for acer 
+
+pseudo_r2 = function(acer_poi) {
+                1 -  acer_poi$deviance / acer_poi$null.deviance
+}
+pseudo_r2(acer_poi)
+```
+```{r}
+abi_poi = glm(cover ~ tci + elev + streamdist + disturb + beers, data=abiefra, family='poisson')
+summary(abi_poi)
+
+pseudo_r2_abi = function(abi_poi) {
+                1 -  abi_poi$deviance / abi_poi$null.deviance
+}
+pseudo_r2_abi(abi_poi)
+
+##elev, streamdist, and beers are significant 
+```
+Conclusions:
+
+The data set needs to be modeled to include absences for cover.  I know how to do this but do not understand how to run statistics for each plot and compare all of them.  From the models using the long format, we can see trends that the Red Maples are widespread, and have less enviornmental factors that effect their distribution.  The Fraisier fir is a habitat specialist and elevation, distance from steam, and slope aspect have a signifianct effect on cover.  This species is also less widespread with fewer individuals.  
+
+
+
