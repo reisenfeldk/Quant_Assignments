@@ -1,0 +1,129 @@
+```{r}
+library(vegan)
+data(dune)
+data(dune.env)
+?dune
+```
+
+```{r}
+dune_mds = metaMDS(dune)
+```
+
+```{r}
+ plot(dune_mds, type='n')
+ text(dune_mds, 'sp', cex=.5)
+ # generate vector of colors 
+ color_vect = rev(terrain.colors(6))[-1]
+ points(dune_mds, 'sites', pch=19, 
+        col=color_vect[dune.env$Moisture])
+ legend('topright', paste("Moisture =", 1:5, sep=''), 
+        col=color_vect, pch=19)
+```
+1.  The goal of the above graph is to get an overall image of the similarity (and dissimilarity) between the samples and the species.  The plot suggests that there is aggrgation of different mositures and they correspond to different species that are present.  We need to examine these apparent patterns quantitatively to know confidently that the observed differences are significant. 
+```{r}
+dune.env$Moisture = factor(dune.env$Moisture, levels = 1:5, ordered = FALSE)
+```
+
+```{r}
+cca_dune = cca(dune ~ ., data=dune.env)
+RsquareAdj(cca_dune, 100)
+```
+adjusted r squared is much lower...a lot of variation may be due to random chance.
+```{r}
+anova(cca_dune, permutations = 999)
+```
+```{r}
+anova(cca_dune, permutations = 999, by="margin")
+```
+```{r}
+plot(cca_dune, type='n', scaling=1)
+orditorp(cca_dune, display='sp', cex=0.5, scaling=1, col='blue')
+text(cca_dune, display='bp', col='red')
+```
+2.  The overall model does not exaplin much variation.  None of the variables are significant when they stand alone.  Next I will examine individuals variables that are slightly more significant then the others...
+```{r}
+cca_dune1 = cca(dune ~ A1 + Moisture + Management + Manure, data=dune.env)
+RsquareAdj(cca_dune1, 100)
+```
+
+```{r}
+anova(cca_dune1, permutations = 999)
+anova(cca_dune1, permutations = 999, by="margin")
+```
+drop either manure or management (I dropped manure just because I am more interested in Managment)
+
+```{r}
+cca_dune2 = cca(dune ~ A1 + Moisture + Management, data=dune.env)
+RsquareAdj(cca_dune2, 100)
+```
+```{r}
+anova(cca_dune2, permutations = 999)
+anova(cca_dune2, permutations = 999, by='margin')
+```
+```{r}
+plot(cca_dune2, type='n', scaling=1)
+orditorp(cca_dune2, display='sp', cex=0.5, scaling=1, col='blue')
+text(cca_dune2, display='bp', col='red')
+```
+
+Mositure and Management are significant...I will run them together and then alone
+```{r}
+cca_dune_mm = cca(dune ~ Moisture + Management, data=dune.env)
+RsquareAdj(cca_dune_mm, 100)
+```
+```{r}
+anova(cca_dune_mm, permutations = 999)
+anova(cca_dune_mm, permutations = 999, by='margin')
+```
+```{r}
+plot(cca_dune_mm, type='n', scaling=1)
+orditorp(cca_dune_mm, display='sp', cex=0.5, scaling=1, col='blue')
+text(cca_dune_mm, display='bp', col='red')
+```
+Only moisture is significant alone...now I will do both individually
+
+```{r}
+cca_dune3 = cca(dune ~ Management, data=dune.env)
+RsquareAdj(cca_dune3, 100)
+```
+```{r}
+anova(cca_dune3, permutations = 999, by='margin')
+```
+
+```{r}
+plot(cca_dune3, type='n', scaling=1)
+orditorp(cca_dune3, display='sp', cex=0.5, scaling=1, col='blue')
+text(cca_dune3, display='bp', col='red')
+```
+I want to look at moisture alone as well...
+```{r}
+cca_dune4 = cca(dune ~ Moisture, data=dune.env)
+RsquareAdj(cca_dune4, 100)
+```
+```{r}
+anova(cca_dune4, permutations = 999, by='margin')
+```
+```{r}
+plot(cca_dune4, type='n', scaling=1)
+orditorp(cca_dune4, display='sp', cex=0.5, scaling=1, col='blue')
+text(cca_dune4, display='bp', col='red')
+```
+visiualize both models together...
+```{r}
+dune_fit = envfit(dune_mds, dune.env)
+dune_fit
+```
+```{r}
+plot(dune_mds, type = 'n')
+text(dune_mds, 'sp', cex = 0.5)
+##generate vector of colors 
+mois_lvs = sort(unique(dune.env$Moisture))
+color_vect = rev(terrain.colors(length(mois_lvs) + 1))[-1]
+points(dune_mds, 'sites', pch = 19,
+       col = color_vect[dune.env$Moisture])
+##add enviornmental variables for p value less than 0.01
+plot(dune_fit, p.max = 0.01, cex = 0.75)
+legend('topright', paste("Moisture =", mois_lvs, sep = ''),
+       col = color_vect, pch = 19)
+```
+3. The first approach suggests that moisture may drive some significant differences along the axes. It also shows that species may prefer various moistures and are distributed in a pattern that corresponds to moisture.  The CCA model can tell us quantitatively what is going on with the model.  From analysis, management and moisture are significantly driving the variation.  This information is useful to quantify significance and back up the first visual model.  I find both analyses useful, but I think the CCA is necessary to justify the patterns that you see. 
